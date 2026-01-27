@@ -149,58 +149,46 @@ func _load_ply(file: FileAccess) -> LoadResult:
 # @return: LoadResult with parsed splat data
 func _load_splat(file: FileAccess) -> LoadResult:
 	var points: Array[SplatPoint] = []
-	# Each splat contains 14 floats (56 bytes total):
-	# 3 floats (position) + 3 floats (scale) + 4 floats (rotation) + 3 floats (color) + 1 float (opacity)
-	var bytes_per_splat = 56  # Updated to correct size: 14 floats * 4 bytes = 56 bytes
-	
-	# Read splats until end of file
-	while not file.eof_reached():
-		# Ensure we have enough bytes remaining for a complete splat
-		if file.get_position() + bytes_per_splat > file.get_length():
-			break
-		
+	var bytes_per_splat = 56  # 14 floats * 4 bytes each
+
+	# Read entire file into memory at once instead of 14 individual get_float() calls per point
+	var buffer = file.get_buffer(file.get_length())
+	var total_points = buffer.size() / bytes_per_splat
+	points.resize(total_points)
+
+	for i in range(total_points):
+		var offset = i * bytes_per_splat
 		var point = SplatPoint.new()
-		
-		# Read 3D position (3 floats: x, y, z)
+
 		point.position = Vector3(
-			file.get_float(),  # X coordinate
-			file.get_float(),  # Y coordinate
-			file.get_float()   # Z coordinate
+			buffer.decode_float(offset),
+			buffer.decode_float(offset + 4),
+			buffer.decode_float(offset + 8)
 		)
-		
-		# Read scale factors for each axis (3 floats: sx, sy, sz)
-		# These define the size of the ellipsoid splat in each dimension
 		point.scale = Vector3(
-			file.get_float(),  # X-axis scale
-			file.get_float(),  # Y-axis scale
-			file.get_float()   # Z-axis scale
+			buffer.decode_float(offset + 12),
+			buffer.decode_float(offset + 16),
+			buffer.decode_float(offset + 20)
 		)
-		
-		# Read rotation quaternion (4 floats: x, y, z, w)
-		# Defines the orientation of the ellipsoid splat in 3D space
 		point.rotation = Quaternion(
-			file.get_float(),  # Quaternion X component
-			file.get_float(),  # Quaternion Y component
-			file.get_float(),  # Quaternion Z component
-			file.get_float()   # Quaternion W component
+			buffer.decode_float(offset + 24),
+			buffer.decode_float(offset + 28),
+			buffer.decode_float(offset + 32),
+			buffer.decode_float(offset + 36)
 		)
-		
-		# Read RGB color (3 floats: r, g, b, typically normalized 0-1)
 		point.color = Color(
-			file.get_float(),  # Red component
-			file.get_float(),  # Green component
-			file.get_float()   # Blue component
+			buffer.decode_float(offset + 40),
+			buffer.decode_float(offset + 44),
+			buffer.decode_float(offset + 48)
 		)
-		
-		# Read opacity/alpha value (1 float: 0-1, where 1 = fully opaque)
-		point.opacity = file.get_float()
-		
-		points.append(point)
-		
-		# Yield control every 1000 points to prevent UI freezing
-		if points.size() % 1000 == 0:
+		point.opacity = buffer.decode_float(offset + 52)
+
+		points[i] = point
+
+		# Yield every 10000 points to keep UI responsive
+		if i % 10000 == 0 and i > 0:
 			await Engine.get_main_loop().process_frame
-	
+
 	return LoadResult.new(true, points)
 
 # Loads simple XYZ format files (plain text coordinate data)
