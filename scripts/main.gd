@@ -80,12 +80,9 @@ func _on_file_selected(path: String):
 
 	# Handle the loading result
 	if result.success:
-		# Create 3D visualization from loaded points
-		_create_point_cloud(result.points)
-		# Update UI with success message and point count
-		info_label.text = "Loaded %d points from %s" % [result.points.size(), path.get_file()]
+		_create_point_cloud(result.vertices, result.colors)
+		info_label.text = "Loaded %d points from %s" % [result.point_count(), path.get_file()]
 	else:
-		# Display error message if loading failed
 		info_label.text = "Error loading file: " + result.error
 
 func _on_files_dropped(files: PackedStringArray):
@@ -104,43 +101,28 @@ func _on_load_progress(loaded: int, total: int):
 	else:
 		info_label.text = "Loading... %d points" % loaded
 
-# Creates a 3D mesh from point cloud data and adds it to the scene
-# @param points: Array of SplatPoint objects containing position and color data
-func _create_point_cloud(points: Array):
-	# Create a new mesh instance to hold our point cloud
+# Creates a 3D mesh from packed vertex/color arrays and adds it to the scene
+func _create_point_cloud(vertices: PackedVector3Array, colors: PackedColorArray):
 	var mesh_instance = MeshInstance3D.new()
 	var array_mesh = ArrayMesh.new()
 
-	# Prepare arrays to hold vertex data
-	var vertices = PackedVector3Array()  # 3D positions of each point
-	var colors = PackedColorArray()     # Color data for each point
-
-	# Extract position and color data from each point
-	for point in points:
-		vertices.append(point.position)
-		colors.append(point.color)
-
-	# Create mesh array structure required by Godot
-	# This array contains different types of vertex data (position, color, normals, etc.)
 	var arrays = []
-	arrays.resize(Mesh.ARRAY_MAX)           # Resize to accommodate all possible data types
-	arrays[Mesh.ARRAY_VERTEX] = vertices   # Assign vertex positions
-	arrays[Mesh.ARRAY_COLOR] = colors      # Assign vertex colors
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = vertices
+	arrays[Mesh.ARRAY_COLOR] = colors
 
-	# Create the mesh surface using point primitives
 	# PRIMITIVE_POINTS renders each vertex as an individual point
 	array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays)
 	mesh_instance.mesh = array_mesh
 
-	# Configure material properties for optimal point rendering
+	# Configure material for point rendering
 	var p_material = StandardMaterial3D.new()
-	p_material.vertex_color_use_as_albedo = true  # Use vertex colors as the base color
-	p_material.use_point_size = true              # Enable custom point sizing
-	p_material.point_size = 2.0                   # Set point size in pixels
-	p_material.no_depth_test = false              # Enable depth testing for proper occlusion
-	mesh_instance.material_override = p_material  # Apply material to mesh
+	p_material.vertex_color_use_as_albedo = true
+	p_material.use_point_size = true
+	p_material.point_size = 2.0
+	p_material.no_depth_test = false
+	mesh_instance.material_override = p_material
 
-	# Add the completed mesh to the point cloud container in the scene
 	point_cloud.add_child(mesh_instance)
 
 # Global input handler for camera controls

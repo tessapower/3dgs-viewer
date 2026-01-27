@@ -6,42 +6,22 @@ class_name SplatLoader
 
 signal progress_updated(loaded: int, total: int)
 
-# Represents a single point in a 3D point cloud with all associated properties
-# This class stores comprehensive data for 3D Gaussian Splat rendering
-class SplatPoint:
-	var position: Vector3    # 3D world position of the point
-	var color: Color        # RGB color with alpha channel
-	var normal: Vector3     # Surface normal vector (used for lighting calculations)
-	var scale: Vector3      # Scale factors for each axis (for ellipsoid splats)
-	var rotation: Quaternion # Orientation of the splat in 3D space
-	var opacity: float      # Transparency value (0.0 = transparent, 1.0 = opaque)
-
-	# Constructor with default values for basic point cloud visualization
-	# @param pos: Initial position (defaults to origin)
-	# @param col: Initial color (defaults to white)
-	func _init(pos: Vector3 = Vector3.ZERO, col: Color = Color.WHITE):
-		position = pos
-		color = col
-		normal = Vector3.UP         # Default normal pointing up
-		scale = Vector3.ONE         # Default uniform scale
-		rotation = Quaternion.IDENTITY  # Default no rotation
-		opacity = 1.0               # Default fully opaque
-
 # Container class for file loading results
-# Provides success/failure status with either point data or error information
+# Carries packed vertex/color arrays directly to avoid per-point object overhead
 class LoadResult:
-	var success: bool                # True if loading was successful
-	var points: Array[SplatPoint]    # Array of loaded points (empty if failed)
-	var error: String                # Error message (empty if successful)
+	var success: bool
+	var vertices: PackedVector3Array
+	var colors: PackedColorArray
+	var error: String
 
-	# Constructor for creating load results
-	# @param is_success: Whether the operation succeeded
-	# @param point_data: Array of successfully loaded points
-	# @param error_msg: Error message if loading failed
-	func _init(is_success: bool = false, point_data: Array[SplatPoint] = [], error_msg: String = ""):
+	func _init(is_success: bool = false, verts: PackedVector3Array = PackedVector3Array(), cols: PackedColorArray = PackedColorArray(), error_msg: String = ""):
 		success = is_success
-		points = point_data
+		vertices = verts
+		colors = cols
 		error = error_msg
+
+	func point_count() -> int:
+		return vertices.size()
 
 # Main entry point for loading any supported point cloud file format
 # Automatically detects file format from extension and routes to appropriate loader
@@ -51,7 +31,7 @@ func load_file(path: String) -> LoadResult:
 	# Attempt to open the file for reading
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
-		return LoadResult.new(false, [], "Could not open file: " + path)
+		return LoadResult.new(false, PackedVector3Array(), PackedColorArray(), "Could not open file: " + path)
 
 	# Determine file format from extension
 	var extension = path.get_extension().to_lower()
@@ -70,7 +50,7 @@ func load_file(path: String) -> LoadResult:
 			result = await _load_xyz(file)
 		_:
 			# Unsupported file format
-			result = LoadResult.new(false, [], "Unsupported file format: " + extension)
+			result = LoadResult.new(false, PackedVector3Array(), PackedColorArray(), "Unsupported file format: " + extension)
 
 	# Clean up file handle
 	file.close()
@@ -82,66 +62,86 @@ func load_file(path: String) -> LoadResult:
 # @param file: Open file handle for reading
 # @return: LoadResult with parsed point cloud data
 func _load_ply(file: FileAccess) -> LoadResult:
-	var points: Array[SplatPoint] = []
-	var vertex_count = 0        # Number of vertices declared in header
-	var in_header = true        # Flag to track if we're still parsing header
-	var properties = []         # List of property definitions from header
+	var vertices = PackedVector3Array()
+	var colors = PackedColorArray()
+	var vertex_count = 0
+	var in_header = true
+	# Maps property names to their column index in the data
+	var prop_index = {}
+	var prop_types = {}
+	var prop_count = 0
 
 	# Parse PLY header section
-	# The header defines the structure and count of data that follows
 	while in_header:
 		var line = file.get_line().strip_edges()
 
 		if line == "end_header":
-			# Header parsing complete, data section begins next
 			in_header = false
 		elif line.begins_with("element vertex"):
-			# Extract vertex count from "element vertex N" line
 			var parts = line.split(" ")
 			if parts.size() >= 3:
 				vertex_count = parts[2].to_int()
 		elif line.begins_with("property"):
-			# Store property definitions (x, y, z, red, green, blue, etc.)
-			properties.append(line)
+			# Format: "property <type> <name>"
+			var parts = line.split(" ")
+			if parts.size() >= 3:
+				var prop_type = parts[1]  # e.g. "float", "uchar"
+				var prop_name = parts[2]  # e.g. "x", "red"
+				prop_index[prop_name] = prop_count
+				prop_types[prop_name] = prop_type
+				prop_count += 1
+
+	# Resolve column indices for position and color properties
+	var ix = prop_index.get("x", -1)
+	var iy = prop_index.get("y", -1)
+	var iz = prop_index.get("z", -1)
+	var ir = prop_index.get("red", -1)
+	var ig = prop_index.get("green", -1)
+	var ib = prop_index.get("blue", -1)
+	var has_position = ix >= 0 and iy >= 0 and iz >= 0
+	var has_color = ir >= 0 and ig >= 0 and ib >= 0
+	# Determine if colors need normalization (uchar 0-255 vs float 0-1)
+	var color_is_uchar = has_color and prop_types.get("red", "") == "uchar"
+
+	vertices.resize(vertex_count)
+	colors.resize(vertex_count)
 
 	# Parse vertex data section
-	# Each line contains space-separated values for one vertex
 	for i in range(vertex_count):
 		if file.eof_reached():
 			break
 
 		var line = file.get_line().strip_edges()
 		if line.is_empty():
-			continue  # Skip empty lines
+			continue
 
 		var values = line.split(" ")
-		if values.size() < 3:
-			continue  # Need at least X, Y, Z coordinates
+		if not has_position or values.size() <= ix or values.size() <= iy or values.size() <= iz:
+			continue
 
-		# Create new point with position data
-		var point = SplatPoint.new()
-		point.position = Vector3(
-			values[0].to_float(),  # X coordinate
-			values[1].to_float(),  # Y coordinate
-			values[2].to_float()   # Z coordinate
+		vertices[i] = Vector3(
+			values[ix].to_float(),
+			values[iy].to_float(),
+			values[iz].to_float()
 		)
 
-		# Parse color data if available (typically RGB values 0-255)
-		if values.size() >= 6:
-			point.color = Color(
-				values[3].to_float() / 255.0,  # Red component (normalized to 0-1)
-				values[4].to_float() / 255.0,  # Green component (normalized to 0-1)
-				values[5].to_float() / 255.0   # Blue component (normalized to 0-1)
-			)
-
-		points.append(point)
+		if has_color and values.size() > ir and values.size() > ig and values.size() > ib:
+			var r = values[ir].to_float()
+			var g = values[ig].to_float()
+			var b = values[ib].to_float()
+			if color_is_uchar:
+				colors[i] = Color(r / 255.0, g / 255.0, b / 255.0)
+			else:
+				colors[i] = Color(r, g, b)
+		else:
+			colors[i] = Color.WHITE
 
 		# Yield control every 1000 points to prevent UI freezing
 		if i % 1000 == 0:
 			progress_updated.emit(i, vertex_count)
 			await Engine.get_main_loop().process_frame
 
-	return LoadResult.new(true, points)
+	return LoadResult.new(true, vertices, colors)
 
 # Loads binary SPLAT format files (3D Gaussian Splat data)
 # SPLAT format stores complete 3D Gaussian information in binary form
@@ -150,50 +150,40 @@ func _load_ply(file: FileAccess) -> LoadResult:
 # @param file: Open file handle for reading
 # @return: LoadResult with parsed splat data
 func _load_splat(file: FileAccess) -> LoadResult:
-	var points: Array[SplatPoint] = []
+	var vertices = PackedVector3Array()
+	var colors = PackedColorArray()
 	var bytes_per_splat = 56  # 14 floats * 4 bytes each
 
 	# Read entire file into memory at once instead of 14 individual get_float() calls per point
 	var buffer = file.get_buffer(file.get_length())
 	var total_points = buffer.size() / bytes_per_splat
-	points.resize(total_points)
+	vertices.resize(total_points)
+	colors.resize(total_points)
 
 	for i in range(total_points):
 		var offset = i * bytes_per_splat
-		var point = SplatPoint.new()
 
 		# Negate Y to convert from Y-down (3DGS/COLMAP convention) to Y-up (Godot)
-		point.position = Vector3(
+		vertices[i] = Vector3(
 			buffer.decode_float(offset),
 			-buffer.decode_float(offset + 4),
 			buffer.decode_float(offset + 8)
 		)
-		point.scale = Vector3(
-			buffer.decode_float(offset + 12),
-			buffer.decode_float(offset + 16),
-			buffer.decode_float(offset + 20)
-		)
-		point.rotation = Quaternion(
-			buffer.decode_float(offset + 24),
-			buffer.decode_float(offset + 28),
-			buffer.decode_float(offset + 32),
-			buffer.decode_float(offset + 36)
-		)
-		point.color = Color(
+
+		var opacity = buffer.decode_float(offset + 52)
+		colors[i] = Color(
 			buffer.decode_float(offset + 40),
 			buffer.decode_float(offset + 44),
-			buffer.decode_float(offset + 48)
+			buffer.decode_float(offset + 48),
+			opacity
 		)
-		point.opacity = buffer.decode_float(offset + 52)
-
-		points[i] = point
 
 		# Yield every 10000 points to keep UI responsive
 		if i % 10000 == 0 and i > 0:
 			progress_updated.emit(i, total_points)
 			await Engine.get_main_loop().process_frame
 
-	return LoadResult.new(true, points)
+	return LoadResult.new(true, vertices, colors)
 
 # Loads simple XYZ format files (plain text coordinate data)
 # XYZ format is a simple ASCII format with space-separated values per line
@@ -201,46 +191,42 @@ func _load_splat(file: FileAccess) -> LoadResult:
 # @param file: Open file handle for reading
 # @return: LoadResult with parsed point cloud data
 func _load_xyz(file: FileAccess) -> LoadResult:
-	var points: Array[SplatPoint] = []
+	var vertices = PackedVector3Array()
+	var colors = PackedColorArray()
 
 	# Read file line by line until end
 	while not file.eof_reached():
 		var line = file.get_line().strip_edges()
 		if line.is_empty():
-			continue  # Skip empty lines
+			continue
 
-		# Split line into space-separated values
 		var values = line.split(" ")
 		if values.size() < 3:
-			continue  # Need at least X, Y, Z coordinates
+			continue
 
-		# Create point with 3D position
-		var point = SplatPoint.new()
-		point.position = Vector3(
-			values[0].to_float(),  # X coordinate
-			values[1].to_float(),  # Y coordinate
-			values[2].to_float()   # Z coordinate
-		)
+		vertices.append(Vector3(
+			values[0].to_float(),
+			values[1].to_float(),
+			values[2].to_float()
+		))
 
-		# Parse optional color data if present (supports both 0-1 and 0-255 ranges)
+		# Parse optional color data (supports both 0-1 and 0-255 ranges)
 		if values.size() >= 6:
 			var r = values[3].to_float()
 			var g = values[4].to_float()
 			var b = values[5].to_float()
 
 			# Auto-detect color format and normalize to 0-1 range
-			# If any value > 1.0, assume 0-255 range and convert
 			if r > 1.0 or g > 1.0 or b > 1.0:
-				point.color = Color(r / 255.0, g / 255.0, b / 255.0)
+				colors.append(Color(r / 255.0, g / 255.0, b / 255.0))
 			else:
-				# Values already in 0-1 range
-				point.color = Color(r, g, b)
-
-		points.append(point)
+				colors.append(Color(r, g, b))
+		else:
+			colors.append(Color.WHITE)
 
 		# Yield control every 1000 points to prevent UI freezing
-		if points.size() % 1000 == 0:
-			progress_updated.emit(points.size(), 0)
+		if vertices.size() % 1000 == 0:
+			progress_updated.emit(vertices.size(), 0)
 			await Engine.get_main_loop().process_frame
 
-	return LoadResult.new(true, points)
+	return LoadResult.new(true, vertices, colors)
