@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://cdamkqxj5bwsv"]
+[gd_scene format=3 uid="uid://cdamkqxj5bwsv"]
 
 [ext_resource type="Script" uid="uid://bn1rbv2juqcrs" path="res://scripts/main.gd" id="1_o5qli"]
 
-[node name="Main" type="Control"]
+[node name="Main" type="Control" unique_id=1329917261]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -12,7 +12,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_o5qli")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1794486733]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -22,20 +22,20 @@ grow_horizontal = 2
 grow_vertical = 2
 alignment = 1
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
+[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=582591496]
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 256
 alignment = 1
 
-[node name="LoadButton" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="LoadButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=940813184]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 tooltip_text = "Click this button to load a Splat file. Accepted file types are .PLY, .SPLAT, and .XYZ."
 text = "Load Splat File"
 
-[node name="InfoLabel" type="Label" parent="VBoxContainer/HBoxContainer"]
+[node name="InfoLabel" type="Label" parent="VBoxContainer/HBoxContainer" unique_id=1678720682]
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 12
@@ -43,22 +43,22 @@ text = "Click 'Load Splat File' to begin  "
 horizontal_alignment = 2
 vertical_alignment = 1
 
-[node name="ViewportContainer" type="SubViewportContainer" parent="VBoxContainer"]
+[node name="ViewportContainer" type="SubViewportContainer" parent="VBoxContainer" unique_id=1231393126]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 
-[node name="SubViewport" type="SubViewport" parent="VBoxContainer/ViewportContainer"]
+[node name="SubViewport" type="SubViewport" parent="VBoxContainer/ViewportContainer" unique_id=2067807164]
 handle_input_locally = false
 size = Vector2i(1152, 586)
 render_target_update_mode = 4
 
-[node name="Camera3D" type="Camera3D" parent="VBoxContainer/ViewportContainer/SubViewport"]
+[node name="Camera3D" type="Camera3D" parent="VBoxContainer/ViewportContainer/SubViewport" unique_id=1941425832]
 transform = Transform3D(1, 0, 0, 0, 0.766044, 0.642788, 0, -0.642788, 0.766044, 0, 2, 5)
 
-[node name="PointCloud" type="Node3D" parent="VBoxContainer/ViewportContainer/SubViewport"]
+[node name="PointCloud" type="Node3D" parent="VBoxContainer/ViewportContainer/SubViewport" unique_id=955189253]
 
-[node name="ControlsLabel" type="Label" parent="VBoxContainer/ViewportContainer/SubViewport"]
+[node name="ControlsLabel" type="Label" parent="VBoxContainer/ViewportContainer/SubViewport" unique_id=525296257]
 offset_left = 6.0
 offset_top = 563.0
 offset_right = 337.0
@@ -68,7 +68,7 @@ theme_override_font_sizes/font_size = 12
 text = "  Controls: Mouse drag = rotate, Scroll Wheel/W-S = zoom, R = reset"
 vertical_alignment = 1
 
-[node name="FileDialog" type="FileDialog" parent="."]
+[node name="FileDialog" type="FileDialog" parent="." unique_id=1063508829]
 title = "Open a File"
 initial_position = 2
 size = Vector2i(800, 600)
