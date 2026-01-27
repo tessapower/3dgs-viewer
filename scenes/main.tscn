@@ -7,7 +7,6 @@ layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = 27.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_o5qli")
@@ -17,15 +16,12 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -27.0
 grow_horizontal = 2
 grow_vertical = 2
-alignment = 1
 
 [node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer" unique_id=582591496]
 layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 256
+theme_override_constants/separation = 16
 alignment = 1
 
 [node name="LoadButton" type="Button" parent="VBoxContainer/HBoxContainer" unique_id=940813184]
@@ -47,10 +43,11 @@ vertical_alignment = 1
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
+stretch = true
 
 [node name="SubViewport" type="SubViewport" parent="VBoxContainer/ViewportContainer" unique_id=2067807164]
 handle_input_locally = false
-size = Vector2i(1152, 586)
+size = Vector2i(1280, 685)
 render_target_update_mode = 4
 
 [node name="Camera3D" type="Camera3D" parent="VBoxContainer/ViewportContainer/SubViewport" unique_id=1941425832]

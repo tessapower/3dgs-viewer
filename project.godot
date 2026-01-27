@@ -25,4 +25,6 @@ config/icon="res://assets/icon.svg"
 
 [display]
 
-window/size/resizable=false
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
