@@ -156,7 +156,7 @@ func _load_splat(file: FileAccess) -> LoadResult:
 
 	# Read entire file into memory at once instead of 14 individual get_float() calls per point
 	var buffer = file.get_buffer(file.get_length())
-	var total_points = buffer.size() / bytes_per_splat
+	var total_points: int = buffer.size() / bytes_per_splat
 	vertices.resize(total_points)
 	colors.resize(total_points)
 
