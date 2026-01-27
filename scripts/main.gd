@@ -29,6 +29,7 @@ func _ready():
 	# Connect UI signals to their respective handlers
 	load_button.pressed.connect(_on_load_button_pressed)
 	file_dialog.file_selected.connect(_on_file_selected)
+	get_tree().root.files_dropped.connect(_on_files_dropped)
 
 	# Configure the file dialog to support multiple point cloud formats
 	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -41,7 +42,7 @@ func _ready():
 	file_dialog.set_current_dir("res://tests/")
 
 	# Set initial instruction text for the user
-	info_label.text = "Click 'Load Splat File' to begin"
+	info_label.text = "Load a file or drag and drop to begin"
 
 	# Initialize camera position and orientation
 	# Position camera at a good viewing distance from the origin
@@ -85,6 +86,16 @@ func _on_file_selected(path: String):
 	else:
 		# Display error message if loading failed
 		info_label.text = "Error loading file: " + result.error
+
+func _on_files_dropped(files: PackedStringArray):
+	if files.size() == 0:
+		return
+	var path = files[0]
+	var ext = path.get_extension().to_lower()
+	if ext in ["ply", "splat", "xyz"]:
+		_on_file_selected(path)
+	else:
+		info_label.text = "Unsupported file type: ." + ext
 
 # Creates a 3D mesh from point cloud data and adds it to the scene
 # @param points: Array of SplatPoint objects containing position and color data

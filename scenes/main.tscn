@@ -35,8 +35,7 @@ text = "Load Splat File"
 layout_mode = 2
 theme_override_colors/font_color = Color(0, 0, 0, 1)
 theme_override_font_sizes/font_size = 12
-text = "Click 'Load Splat File' to begin  "
-horizontal_alignment = 2
+text = "Load a file or drag and drop to begin"
 vertical_alignment = 1
 
 [node name="ViewportContainer" type="SubViewportContainer" parent="VBoxContainer" unique_id=1231393126]
@@ -55,15 +54,11 @@ transform = Transform3D(1, 0, 0, 0, 0.766044, 0.642788, 0, -0.642788, 0.766044, 
 
 [node name="PointCloud" type="Node3D" parent="VBoxContainer/ViewportContainer/SubViewport" unique_id=955189253]
 
-[node name="ControlsLabel" type="Label" parent="VBoxContainer/ViewportContainer/SubViewport" unique_id=525296257]
-offset_left = 6.0
-offset_top = 563.0
-offset_right = 337.0
-offset_bottom = 580.0
-theme_override_colors/font_color = Color(1, 0.425788, 0.357085, 1)
+[node name="ControlsLabel" type="Label" parent="VBoxContainer" unique_id=525296257]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 12
 text = "  Controls: Drag = rotate, Shift+Drag/Middle = pan, Scroll/W-S = zoom, R = reset"
-vertical_alignment = 1
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=1063508829]
 title = "Open a File"
