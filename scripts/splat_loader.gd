@@ -4,6 +4,8 @@
 extends RefCounted
 class_name SplatLoader
 
+signal progress_updated(loaded: int, total: int)
+
 # Represents a single point in a 3D point cloud with all associated properties
 # This class stores comprehensive data for 3D Gaussian Splat rendering
 class SplatPoint:
@@ -135,8 +137,8 @@ func _load_ply(file: FileAccess) -> LoadResult:
 		points.append(point)
 
 		# Yield control every 1000 points to prevent UI freezing
-		# This allows the main thread to process other events
 		if i % 1000 == 0:
+			progress_updated.emit(i, vertex_count)
 			await Engine.get_main_loop().process_frame
 
 	return LoadResult.new(true, points)
@@ -187,6 +189,7 @@ func _load_splat(file: FileAccess) -> LoadResult:
 
 		# Yield every 10000 points to keep UI responsive
 		if i % 10000 == 0 and i > 0:
+			progress_updated.emit(i, total_points)
 			await Engine.get_main_loop().process_frame
 
 	return LoadResult.new(true, points)
@@ -236,6 +239,7 @@ func _load_xyz(file: FileAccess) -> LoadResult:
 
 		# Yield control every 1000 points to prevent UI freezing
 		if points.size() % 1000 == 0:
+			progress_updated.emit(points.size(), 0)
 			await Engine.get_main_loop().process_frame
 
 	return LoadResult.new(true, points)

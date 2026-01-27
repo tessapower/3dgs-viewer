@@ -30,6 +30,7 @@ func _ready():
 	load_button.pressed.connect(_on_load_button_pressed)
 	file_dialog.file_selected.connect(_on_file_selected)
 	get_tree().root.files_dropped.connect(_on_files_dropped)
+	splat_loader.progress_updated.connect(_on_load_progress)
 
 	# Configure the file dialog to support multiple point cloud formats
 	file_dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
@@ -96,6 +97,12 @@ func _on_files_dropped(files: PackedStringArray):
 		_on_file_selected(path)
 	else:
 		info_label.text = "Unsupported file type: ." + ext
+
+func _on_load_progress(loaded: int, total: int):
+	if total > 0:
+		info_label.text = "Loading... %d / %d points" % [loaded, total]
+	else:
+		info_label.text = "Loading... %d points" % loaded
 
 # Creates a 3D mesh from point cloud data and adds it to the scene
 # @param points: Array of SplatPoint objects containing position and color data
