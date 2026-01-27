@@ -162,9 +162,10 @@ func _load_splat(file: FileAccess) -> LoadResult:
 		var offset = i * bytes_per_splat
 		var point = SplatPoint.new()
 
+		# Negate Y to convert from Y-down (3DGS/COLMAP convention) to Y-up (Godot)
 		point.position = Vector3(
 			buffer.decode_float(offset),
-			buffer.decode_float(offset + 4),
+			-buffer.decode_float(offset + 4),
 			buffer.decode_float(offset + 8)
 		)
 		point.scale = Vector3(
