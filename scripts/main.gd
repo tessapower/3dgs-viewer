@@ -17,8 +17,10 @@ extends Control
 var splat_loader: SplatLoader  # Handles loading of different point cloud file formats
 
 # Camera Control State
-var is_dragging: bool = false      # True when user is dragging mouse to rotate camera
-var last_mouse_position: Vector2   # Stores previous mouse position for calculating delta movement
+var is_rotating: bool = false
+var is_panning: bool = false
+var last_mouse_position: Vector2
+var pivot: Vector3 = Vector3.ZERO  # The point the camera orbits around
 
 func _ready():
 	# Initialize the splat loader component
@@ -126,55 +128,70 @@ func _create_point_cloud(points: Array):
 # Global input handler for camera controls
 # Handles mouse and keyboard input for camera manipulation
 func _input(event):
-	# Handle mouse button events
 	if event is InputEventMouseButton:
-		# Left mouse button: Start/stop camera rotation
 		if event.button_index == MOUSE_BUTTON_LEFT:
-			is_dragging = event.pressed           # Track drag state
-			last_mouse_position = event.position  # Store initial position
-		# Mouse wheel: Zoom in/out (only on button press, not release)
+			if event.pressed and event.shift_pressed:
+				# Shift+left-click: start panning
+				is_panning = true
+				is_rotating = false
+			elif event.pressed:
+				# Left-click: start rotating
+				is_rotating = true
+				is_panning = false
+			else:
+				is_rotating = false
+				is_panning = false
+			last_mouse_position = event.position
+		elif event.button_index == MOUSE_BUTTON_MIDDLE:
+			is_panning = event.pressed
+			is_rotating = false
+			last_mouse_position = event.position
 		elif event.pressed:
 			if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-				_zoom_camera(-0.5)  # Negative value zooms in (moves camera closer)
+				_zoom_camera(-0.5)
 			elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-				_zoom_camera(0.5)   # Positive value zooms out (moves camera away)
+				_zoom_camera(0.5)
 
-	# Handle mouse movement during drag operations
-	elif event is InputEventMouseMotion and is_dragging:
-		# Calculate mouse movement delta
+	elif event is InputEventMouseMotion:
 		var delta = event.position - last_mouse_position
 		last_mouse_position = event.position
 
-		# Apply rotation to camera based on mouse movement
-		var sensitivity = 0.005                                      # Sensitivity multiplier
-		camera.rotate_y(-delta.x * sensitivity)                      # Horizontal rotation (Y-axis)
-		camera.rotate_object_local(Vector3(1, 0, 0), -delta.y * sensitivity)  # Vertical rotation (local X-axis)
+		if is_rotating:
+			var sensitivity = 0.005
+			# Orbit around the pivot point
+			var offset = camera.position - pivot
+			var rot_y = Basis(Vector3.UP, -delta.x * sensitivity)
+			var local_x = camera.global_transform.basis.x
+			var rot_x = Basis(local_x, -delta.y * sensitivity)
+			offset = rot_y * rot_x * offset
+			camera.position = pivot + offset
+			camera.look_at(pivot, Vector3.UP)
+		elif is_panning:
+			var sensitivity = 0.005
+			var dist = (camera.position - pivot).length()
+			var pan_speed = dist * sensitivity
+			# Pan in the camera's local XY plane
+			var right = camera.global_transform.basis.x
+			var up = camera.global_transform.basis.y
+			var pan_offset = (-right * delta.x + up * delta.y) * pan_speed
+			camera.position += pan_offset
+			pivot += pan_offset
 
-	# Handle keyboard input for camera controls
 	elif event is InputEventKey and event.pressed:
-		# WASD/Arrow key controls for zooming
 		if event.keycode == KEY_W or event.keycode == KEY_UP:
-			_zoom_camera(-0.5)  # Zoom in (W/Up Arrow)
+			_zoom_camera(-0.5)
 		elif event.keycode == KEY_S or event.keycode == KEY_DOWN:
-			_zoom_camera(0.5)   # Zoom out (S/Down Arrow)
+			_zoom_camera(0.5)
 		elif event.keycode == KEY_R:
-			_reset_camera()     # Reset camera to initial position (R key)
+			_reset_camera()
 
-# Moves the camera closer to or further from the center point
-# @param amount: Positive values move away, negative values move closer
 func _zoom_camera(amount: float):
-	# Calculate the direction vector from center to camera
-	var direction = (camera.position - Vector3.ZERO).normalized()
-	# Calculate new position by moving along the direction vector
+	var direction = (camera.position - pivot).normalized()
 	var new_position = camera.position + direction * amount
-
-	# Prevent camera from getting too close to the center (minimum distance of 0.5 units)
-	# This prevents the camera from going inside the point cloud or past the center
-	if new_position.length() > 0.5:
+	if (new_position - pivot).length() > 0.5:
 		camera.position = new_position
 
-# Resets the camera to its initial position and orientation
-# Useful when the user gets lost or wants to start over
 func _reset_camera():
-	camera.position = Vector3(0, 2, 5)           # Reset to initial position
-	camera.look_at(Vector3.ZERO, Vector3.UP)     # Look at center with up vector
+	pivot = Vector3.ZERO
+	camera.position = Vector3(0, 2, 5)
+	camera.look_at(Vector3.ZERO, Vector3.UP)

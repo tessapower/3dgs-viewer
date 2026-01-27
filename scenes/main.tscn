@@ -62,7 +62,7 @@ offset_right = 337.0
 offset_bottom = 580.0
 theme_override_colors/font_color = Color(1, 0.425788, 0.357085, 1)
 theme_override_font_sizes/font_size = 12
-text = "  Controls: Mouse drag = rotate, Scroll Wheel/W-S = zoom, R = reset"
+text = "  Controls: Drag = rotate, Shift+Drag/Middle = pan, Scroll/W-S = zoom, R = reset"
 vertical_alignment = 1
 
 [node name="FileDialog" type="FileDialog" parent="." unique_id=1063508829]

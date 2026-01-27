@@ -13,7 +13,7 @@ class SplatPoint:
 	var scale: Vector3      # Scale factors for each axis (for ellipsoid splats)
 	var rotation: Quaternion # Orientation of the splat in 3D space
 	var opacity: float      # Transparency value (0.0 = transparent, 1.0 = opaque)
-	
+
 	# Constructor with default values for basic point cloud visualization
 	# @param pos: Initial position (defaults to origin)
 	# @param col: Initial color (defaults to white)
@@ -31,7 +31,7 @@ class LoadResult:
 	var success: bool                # True if loading was successful
 	var points: Array[SplatPoint]    # Array of loaded points (empty if failed)
 	var error: String                # Error message (empty if successful)
-	
+
 	# Constructor for creating load results
 	# @param is_success: Whether the operation succeeded
 	# @param point_data: Array of successfully loaded points
@@ -50,11 +50,11 @@ func load_file(path: String) -> LoadResult:
 	var file = FileAccess.open(path, FileAccess.READ)
 	if not file:
 		return LoadResult.new(false, [], "Could not open file: " + path)
-	
+
 	# Determine file format from extension
 	var extension = path.get_extension().to_lower()
 	var result: LoadResult
-	
+
 	# Route to appropriate loader based on file extension
 	match extension:
 		"ply":
@@ -69,7 +69,7 @@ func load_file(path: String) -> LoadResult:
 		_:
 			# Unsupported file format
 			result = LoadResult.new(false, [], "Unsupported file format: " + extension)
-	
+
 	# Clean up file handle
 	file.close()
 	return result
@@ -84,12 +84,12 @@ func _load_ply(file: FileAccess) -> LoadResult:
 	var vertex_count = 0        # Number of vertices declared in header
 	var in_header = true        # Flag to track if we're still parsing header
 	var properties = []         # List of property definitions from header
-	
+
 	# Parse PLY header section
 	# The header defines the structure and count of data that follows
 	while in_header:
 		var line = file.get_line().strip_edges()
-		
+
 		if line == "end_header":
 			# Header parsing complete, data section begins next
 			in_header = false
@@ -101,21 +101,21 @@ func _load_ply(file: FileAccess) -> LoadResult:
 		elif line.begins_with("property"):
 			# Store property definitions (x, y, z, red, green, blue, etc.)
 			properties.append(line)
-	
+
 	# Parse vertex data section
 	# Each line contains space-separated values for one vertex
 	for i in range(vertex_count):
 		if file.eof_reached():
 			break
-		
+
 		var line = file.get_line().strip_edges()
 		if line.is_empty():
 			continue  # Skip empty lines
-		
+
 		var values = line.split(" ")
 		if values.size() < 3:
 			continue  # Need at least X, Y, Z coordinates
-		
+
 		# Create new point with position data
 		var point = SplatPoint.new()
 		point.position = Vector3(
@@ -123,7 +123,7 @@ func _load_ply(file: FileAccess) -> LoadResult:
 			values[1].to_float(),  # Y coordinate
 			values[2].to_float()   # Z coordinate
 		)
-		
+
 		# Parse color data if available (typically RGB values 0-255)
 		if values.size() >= 6:
 			point.color = Color(
@@ -131,14 +131,14 @@ func _load_ply(file: FileAccess) -> LoadResult:
 				values[4].to_float() / 255.0,  # Green component (normalized to 0-1)
 				values[5].to_float() / 255.0   # Blue component (normalized to 0-1)
 			)
-		
+
 		points.append(point)
-		
+
 		# Yield control every 1000 points to prevent UI freezing
 		# This allows the main thread to process other events
 		if i % 1000 == 0:
 			await Engine.get_main_loop().process_frame
-	
+
 	return LoadResult.new(true, points)
 
 # Loads binary SPLAT format files (3D Gaussian Splat data)
@@ -198,18 +198,18 @@ func _load_splat(file: FileAccess) -> LoadResult:
 # @return: LoadResult with parsed point cloud data
 func _load_xyz(file: FileAccess) -> LoadResult:
 	var points: Array[SplatPoint] = []
-	
+
 	# Read file line by line until end
 	while not file.eof_reached():
 		var line = file.get_line().strip_edges()
 		if line.is_empty():
 			continue  # Skip empty lines
-		
+
 		# Split line into space-separated values
 		var values = line.split(" ")
 		if values.size() < 3:
 			continue  # Need at least X, Y, Z coordinates
-		
+
 		# Create point with 3D position
 		var point = SplatPoint.new()
 		point.position = Vector3(
@@ -217,13 +217,13 @@ func _load_xyz(file: FileAccess) -> LoadResult:
 			values[1].to_float(),  # Y coordinate
 			values[2].to_float()   # Z coordinate
 		)
-		
+
 		# Parse optional color data if present (supports both 0-1 and 0-255 ranges)
 		if values.size() >= 6:
 			var r = values[3].to_float()
 			var g = values[4].to_float()
 			var b = values[5].to_float()
-			
+
 			# Auto-detect color format and normalize to 0-1 range
 			# If any value > 1.0, assume 0-255 range and convert
 			if r > 1.0 or g > 1.0 or b > 1.0:
@@ -231,11 +231,11 @@ func _load_xyz(file: FileAccess) -> LoadResult:
 			else:
 				# Values already in 0-1 range
 				point.color = Color(r, g, b)
-		
+
 		points.append(point)
-		
+
 		# Yield control every 1000 points to prevent UI freezing
 		if points.size() % 1000 == 0:
 			await Engine.get_main_loop().process_frame
-	
+
 	return LoadResult.new(true, points)
