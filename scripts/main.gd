@@ -50,13 +50,13 @@ func _ready():
 	camera.position = Vector3(0, 2, 5)
 	camera.look_at(Vector3.ZERO, Vector3.UP)  # Look at origin with up vector pointing up
 
-	# Create a bright environment with white background for better point visibility
+	# Create environment with dark background so both colored and white points are visible
 	var environment = Environment.new()
-	environment.background_mode = Environment.BG_COLOR   # Use solid color background
-	environment.background_color = Color.WHITE           # White background for contrast
-	environment.ambient_light_color = Color.WHITE        # White ambient lighting
-	environment.ambient_light_energy = 0.3               # Moderate ambient light intensity
-	camera.environment = environment                     # Apply environment to camera
+	environment.background_mode = Environment.BG_COLOR
+	environment.background_color = Color(0.15, 0.15, 0.15)
+	environment.ambient_light_color = Color.WHITE
+	environment.ambient_light_energy = 0.3
+	camera.environment = environment
 
 # Event handler: Called when the load button is pressed
 # Opens the file dialog for the user to select a point cloud file
