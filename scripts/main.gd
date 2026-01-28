@@ -80,7 +80,9 @@ func _on_file_selected(path: String):
 
 	# Handle the loading result
 	if result.success:
-		_create_point_cloud(result.vertices, result.colors)
+		var centered_verts = _center_vertices(result.vertices)
+		_create_point_cloud(centered_verts, result.colors)
+		_auto_frame_camera(centered_verts)
 		info_label.text = "Loaded %d points from %s" % [result.point_count(), path.get_file()]
 	else:
 		info_label.text = "Error loading file: " + result.error
@@ -197,12 +199,48 @@ func _input(event):
 			_reset_camera()
 
 func _zoom_camera(amount: float):
+	var dist = (camera.position - pivot).length()
+	# Zoom speed proportional to distance — feels consistent at any scale
+	var step = dist * 0.15 * amount
 	var direction = (camera.position - pivot).normalized()
-	var new_position = camera.position + direction * amount
-	if (new_position - pivot).length() > 0.5:
+	var new_position = camera.position + direction * step
+	if (new_position - pivot).length() > 0.01:
 		camera.position = new_position
 
 func _reset_camera():
 	pivot = Vector3.ZERO
 	camera.position = Vector3(0, 2, 5)
+	camera.look_at(Vector3.ZERO, Vector3.UP)
+
+# Translate all vertices so their centroid is at the origin
+func _center_vertices(vertices: PackedVector3Array) -> PackedVector3Array:
+	if vertices.is_empty():
+		return vertices
+
+	var centroid = Vector3.ZERO
+	for v in vertices:
+		centroid += v
+	centroid /= vertices.size()
+
+	var centered = PackedVector3Array()
+	centered.resize(vertices.size())
+	for i in range(vertices.size()):
+		centered[i] = vertices[i] - centroid
+	return centered
+
+# Position the camera to see the entire (already centered) point cloud
+func _auto_frame_camera(vertices: PackedVector3Array):
+	if vertices.is_empty():
+		return
+
+	# Find maximum distance from origin to determine cloud radius
+	var max_dist = 0.0
+	for v in vertices:
+		var d = v.length()
+		if d > max_dist:
+			max_dist = d
+
+	var dist = max(max_dist * 2.0, 0.5)
+	pivot = Vector3.ZERO
+	camera.position = Vector3(0, dist * 0.3, dist)
 	camera.look_at(Vector3.ZERO, Vector3.UP)
