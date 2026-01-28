@@ -117,12 +117,38 @@ func _create_point_cloud(vertices: PackedVector3Array, colors: PackedColorArray)
 	array_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_POINTS, arrays)
 	mesh_instance.mesh = array_mesh
 
-	# Configure material for point rendering
-	var p_material = StandardMaterial3D.new()
-	p_material.vertex_color_use_as_albedo = true
-	p_material.use_point_size = true
-	p_material.point_size = 2.0
-	p_material.no_depth_test = false
+	# Custom shader: distance-based point sizing with Gaussian falloff
+	var shader = Shader.new()
+	shader.code = "
+shader_type spatial;
+render_mode unshaded, blend_mix, depth_draw_opaque, cull_disabled;
+
+uniform float base_point_size : hint_range(1.0, 50.0) = 20.0;
+uniform float min_point_size : hint_range(1.0, 10.0) = 1.0;
+uniform float max_point_size : hint_range(10.0, 200.0) = 80.0;
+
+void vertex() {
+	float dist = length((MODELVIEW_MATRIX * vec4(VERTEX, 1.0)).xyz);
+	POINT_SIZE = clamp(base_point_size / dist, min_point_size, max_point_size);
+}
+
+void fragment() {
+	// Convert square point to soft circular splat with Gaussian falloff
+	vec2 center = POINT_COORD * 2.0 - 1.0;
+	float r2 = dot(center, center);
+
+	// Discard pixels outside the circle
+	if (r2 > 1.0) discard;
+
+	// Gaussian falloff: exp(-r^2 * sigma), sigma controls softness
+	float alpha = exp(-r2 * 3.0) * COLOR.a;
+
+	ALBEDO = COLOR.rgb;
+	ALPHA = alpha;
+}
+"
+	var p_material = ShaderMaterial.new()
+	p_material.shader = shader
 	mesh_instance.material_override = p_material
 
 	point_cloud.add_child(mesh_instance)
