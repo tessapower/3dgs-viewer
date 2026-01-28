@@ -163,7 +163,18 @@ func _input(event):
 			var rot_y = Basis(Vector3.UP, -delta.x * sensitivity)
 			var local_x = camera.global_transform.basis.x
 			var rot_x = Basis(local_x, -delta.y * sensitivity)
-			offset = rot_y * rot_x * offset
+			var new_offset = rot_y * rot_x * offset
+
+			# Clamp pitch to avoid gimbal lock at the poles
+			# The angle between the offset and the horizontal plane must stay within ~85°
+			var pitch_angle = asin(clamp(new_offset.normalized().y, -1.0, 1.0))
+			var max_pitch = deg_to_rad(85.0)
+			if abs(pitch_angle) < max_pitch:
+				offset = new_offset
+			else:
+				# Only apply the horizontal (yaw) rotation
+				offset = rot_y * offset
+
 			camera.position = pivot + offset
 			camera.look_at(pivot, Vector3.UP)
 		elif is_panning:
