@@ -245,6 +245,16 @@ func _zoom_camera(amount: float):
 
 func _reset_camera():
 	pivot = Vector3.ZERO
+
+	# If a point cloud is loaded, reframe the camera to fit it
+	if point_cloud.get_child_count() > 0:
+		var mesh_instance = point_cloud.get_child(0) as MeshInstance3D
+		if mesh_instance and mesh_instance.mesh:
+			var vertices = mesh_instance.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+			_auto_frame_camera(vertices)
+			return
+
+	# Default camera position when no model is loaded
 	camera.position = Vector3(0, 2, 5)
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 
