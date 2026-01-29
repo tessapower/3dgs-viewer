@@ -8,6 +8,8 @@ extends Control
 # These are automatically assigned when the scene is ready
 @onready var file_dialog: FileDialog = $FileDialog
 @onready var load_button: Button = $VBoxContainer/HBoxContainer/LoadButton
+@onready var reset_camera_button: Button = $VBoxContainer/HBoxContainer/ResetCameraButton
+@onready var clear_button: Button = $VBoxContainer/HBoxContainer/ClearButton
 @onready var info_label: Label = $VBoxContainer/HBoxContainer/InfoLabel
 @onready var viewport: SubViewport = $VBoxContainer/ViewportContainer/SubViewport
 @onready var camera: Camera3D = $VBoxContainer/ViewportContainer/SubViewport/Camera3D
@@ -28,6 +30,8 @@ func _ready():
 
 	# Connect UI signals to their respective handlers
 	load_button.pressed.connect(_on_load_button_pressed)
+	reset_camera_button.pressed.connect(_reset_camera)
+	clear_button.pressed.connect(_on_clear_pressed)
 	file_dialog.file_selected.connect(_on_file_selected)
 	get_tree().root.files_dropped.connect(_on_files_dropped)
 	splat_loader.progress_updated.connect(_on_load_progress)
@@ -102,6 +106,12 @@ func _on_load_progress(loaded: int, total: int):
 		info_label.text = "Loading... %d / %d points" % [loaded, total]
 	else:
 		info_label.text = "Loading... %d points" % loaded
+
+func _on_clear_pressed():
+	for child in point_cloud.get_children():
+		child.queue_free()
+	_reset_camera()
+	info_label.text = "Load a file or drag and drop to begin"
 
 # Creates a 3D mesh from packed vertex/color arrays and adds it to the scene
 func _create_point_cloud(vertices: PackedVector3Array, colors: PackedColorArray):
