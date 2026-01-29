@@ -2,103 +2,111 @@
 
 A simple Godot tool for loading and visualizing 3D Gaussian Splat point cloud data.
 
+![Goat skull model](assets/goat-skull.gif)
+
 ## Features
 
 - Load multiple point cloud formats:
-  - PLY files (Stanford Triangle Format)
-  - SPLAT files (3D Gaussian Splat format)
+  - PLY files (ASCII and binary, including 3DGS spherical harmonics)
+  - SPLAT files (standard 32-byte and extended 56-byte formats)
   - XYZ files (simple point format)
-- Interactive 3D visualization
-- Mouse controls for camera navigation
-- Color support for point clouds
-- Asynchronous loading to prevent UI freezing
+- Drag-and-drop file loading
+- Interactive orbit camera with pan, rotate, and zoom
+- Distance-based point sizing with Gaussian falloff rendering
+- Auto-centering and camera framing for any model size
+- Asynchronous loading with progress reporting
 
 ## How to Use
 
-1. Open the project in Godot Engine 4.3+
+1. Open the project in Godot Engine 4.6+
 2. Run the project
-3. Click "Load Splat File" to open a file dialog
-4. Select a supported point cloud file (.ply, .splat, or .xyz)
-5. View the loaded point cloud in the 3D viewport
+3. Click "Load Splat File" or drag and drop a file onto the window
+4. View the loaded point cloud in the 3D viewport
 
 ## Controls
 
 ### Mouse Controls
-- **Left Mouse Button + Drag**: Rotate camera around the point cloud
+
+- **Left Click + Drag**: Rotate camera around the point cloud
+- **Shift + Left Click + Drag** or **Middle Mouse + Drag**: Pan camera
 - **Mouse Wheel Up/Down**: Zoom in/out
 
 ### Keyboard Controls
-- **W** or **↑**: Zoom in
-- **S** or **↓**: Zoom out
-- **R**: Reset camera to default position
 
-### Tips
-- If mouse wheel doesn't work, use W/S keys for zooming
-- Use R key to reset view if you get lost while navigating
-- Camera has minimum zoom distance to prevent going inside the point cloud
+- **W** or **Up Arrow**: Zoom in
+- **S** or **Down Arrow**: Zoom out
+- **R**: Reset camera
+
+### UI Buttons
+
+- **Load Splat File**: Open file dialog to select a point cloud file
+- **Reset Camera**: Reset camera to frame the loaded model (or default position)
+- **Clear**: Remove the current point cloud from the scene
 
 ## Supported File Formats
 
 ### PLY Files
-Standard PLY format with vertex data. Supports position (x, y, z) and color (r, g, b) data.
+
+Standard PLY format with vertex data. Supports both ASCII and binary (little-endian) formats. Reads position (x, y, z) and color from either RGB properties or spherical harmonics DC coefficients (f_dc_0, f_dc_1, f_dc_2).
 
 ### SPLAT Files
-Binary format for 3D Gaussian Splats containing:
-- Position (3 floats)
-- Scale (3 floats)
-- Rotation (4 floats - quaternion)
-- Color (3 floats)
-- Opacity (1 float)
+
+Binary format for 3D Gaussian Splats. Supports two variants:
+
+- **Standard (32 bytes)**: 3×f32 position, 3×f32 scale, 4×u8 RGBA color, 4×u8 rotation
+- **Extended (56 bytes)**: 14×f32 for position, scale, rotation, color, and opacity
 
 ### XYZ Files
+
 Simple text format with space-separated values:
+
 - Position only: `x y z`
 - Position with color: `x y z r g b`
 - Supports both normalized (0-1) and 0-255 color ranges
 
 ## Technical Details
 
-- Built with Godot 4.3
-- Uses ArrayMesh for efficient point cloud rendering
-- Implements asynchronous file loading
-- Supports large point clouds with progressive loading
+- Built with Godot 4.6
+- Uses ArrayMesh with packed arrays for efficient point cloud rendering
+- Custom spatial shader with distance-based point sizing and Gaussian falloff
+- Bulk buffer reads for fast file loading
+- Asynchronous loading with progress callbacks
 
 ## Project Structure
 
-- `main.gd` - Main application controller
-- `main.tscn` - Main scene with UI layout
-- `splat_loader.gd` - Point cloud file loader class
-- `project.godot` - Godot project configuration
+- `scripts/main.gd` - Main application controller (UI, camera, rendering)
+- `scripts/splat_loader.gd` - Point cloud file loader (PLY, SPLAT, XYZ)
+- `scenes/main.tscn` - Main scene with UI layout
+- `tests/` - Example point cloud files and generator script
 
 ## Requirements
 
-- Godot Engine 4.3 or later
-- Point cloud files in supported formats
+- Godot Engine 4.6 or later
 
 ## Example Files
 
-The project includes example files for testing in the `tests`:
+The `tests/` directory includes example files in all three formats:
 
-- `example.ply` - PLY format with 225 colored points
-- `example.splat` - Binary splat format with position, scale, rotation, and color data
-- `example.xyz` - Simple XYZ format with position and color data
+- **Spiral Galaxy** (`galaxy.splat`, `.ply`, `.xyz`) - A spiral galaxy with dense core and sweeping arms
+- **DNA Double Helix** (`dna.splat`, `.ply`, `.xyz`) - A DNA double helix with base pair connections
+- **Torus Knot** (`knot.splat`, `.ply`, `.xyz`) - A trefoil torus knot with flowing HSV colors
 
-These files contain a colorful 5×5×5 cube of points plus 100 randomly scattered points with various colors and properties.
+Each contains 8,000 points with HSV color gradients.
 
 ### Generating New Examples
 
-Run the included Python script found in the `tests` directory to generate fresh example files:
+Run the included Python script from the `tests/` directory:
 
 ```bash
+cd tests
 python generate_example_splat.py
 ```
 
-This will create new example files in all three supported formats.
+This generates all 9 example files (3 shapes × 3 formats).
 
 ## Getting Started
 
-1. Clone or download this project.
-2. Open `project.godot` in Godot Engine.
-3. Run the project.
-4. Try loading the example files first to test the functionality.
-5. Load your own point cloud files!
+1. Clone or download this project
+2. Open `project.godot` in Godot Engine 4.6+
+3. Run the project
+4. Try loading the example files to test, or load your own point cloud files
