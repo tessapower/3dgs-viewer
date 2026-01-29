@@ -27,4 +27,5 @@ config/icon="res://assets/icon.svg"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/stretch/mode="canvas_items"
+window/size/min_width=640
+window/size/min_height=480

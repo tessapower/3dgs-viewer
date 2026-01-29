@@ -2,18 +2,16 @@
 ## file loading, and 3D visualization of point cloud data.
 ###
 ### Author: Tessa Power
-extends Control
+extends Node3D
 
 # UI Component References
-# These are automatically assigned when the scene is ready
-@onready var file_dialog: FileDialog = $FileDialog
-@onready var load_button: Button = $VBoxContainer/HBoxContainer/LoadButton
-@onready var reset_camera_button: Button = $VBoxContainer/HBoxContainer/ResetCameraButton
-@onready var clear_button: Button = $VBoxContainer/HBoxContainer/ClearButton
-@onready var info_label: Label = $VBoxContainer/HBoxContainer/InfoLabel
-@onready var viewport: SubViewport = $VBoxContainer/ViewportContainer/SubViewport
-@onready var camera: Camera3D = $VBoxContainer/ViewportContainer/SubViewport/Camera3D
-@onready var point_cloud: Node3D = $VBoxContainer/ViewportContainer/SubViewport/PointCloud
+@onready var file_dialog: FileDialog = $CanvasLayer/FileDialog
+@onready var load_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/LoadButton
+@onready var reset_camera_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/ResetCameraButton
+@onready var clear_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/ClearButton
+@onready var info_label: Label = $CanvasLayer/MarginContainer/UI/HBoxContainer/InfoLabel
+@onready var camera: Camera3D = $Camera3D
+@onready var point_cloud: Node3D = $PointCloud
 
 # Core Components
 var splat_loader: SplatLoader  # Handles loading of different point cloud file formats
@@ -163,9 +161,8 @@ void fragment() {
 
 	point_cloud.add_child(mesh_instance)
 
-# Global input handler for camera controls
-# Handles mouse and keyboard input for camera manipulation
-func _input(event):
+# Input handler for camera controls (only fires for events not consumed by UI)
+func _unhandled_input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if event.pressed and event.shift_pressed:
