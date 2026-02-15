@@ -1,4 +1,4 @@
-3D Gaussian Splat Viewer
+# 3D Gaussian Splat Viewer
 
 [![pages-build-deployment](https://github.com/tessapower/3dgs-viewer/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/tessapower/3dgs-viewer/actions/workflows/pages/pages-build-deployment)
 
