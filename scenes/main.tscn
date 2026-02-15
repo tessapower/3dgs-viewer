@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cdamkqxj5bwsv"]
 
 [ext_resource type="Script" uid="uid://bn1rbv2juqcrs" path="res://scripts/main.gd" id="1_o5qli"]
-[ext_resource type="FontFile" path="res://assets/fonts/BrailleNormal-lLDX.ttf" id="2_braille"]
+[ext_resource type="FontFile" uid="uid://b4d3iw8r4o8bw" path="res://assets/fonts/BrailleNormal-lLDX.ttf" id="2_braille"]
 
 [node name="Main" type="Node3D" unique_id=191818898]
 script = ExtResource("1_o5qli")
