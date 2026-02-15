@@ -6,6 +6,8 @@ A simple Godot tool for loading and visualizing 3D Gaussian Splat point cloud da
 
 ![Goat skull model](assets/goat-skull.gif)
 
+[Live demo here!](https://tessapower.xyz/3dgs-viewer/)
+
 ## Features
 
 - Load multiple point cloud formats:
