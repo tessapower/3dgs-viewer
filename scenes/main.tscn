@@ -36,7 +36,7 @@ layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 tooltip_text = "Click this button to load a Splat file. Accepted file types are .PLY, .SPLAT, and .XYZ."
-text = "Load Splat File"
+text = "Load File"
 
 [node name="ResetCameraButton" type="Button" parent="CanvasLayer/MarginContainer/UI/HBoxContainer"]
 layout_mode = 2
