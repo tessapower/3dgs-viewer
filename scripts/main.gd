@@ -28,6 +28,7 @@ const EXAMPLE_FILES = {
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
 var _spinner_frame: int = 0
 var _spinner_time: float = 0.0
+var _current_file: String = ""
 
 # Camera Control State
 var is_rotating: bool = false
@@ -39,9 +40,11 @@ func _ready():
 	# Initialize the splat loader component
 	splat_loader = SplatLoader.new()
 
-	# Populate examples dropdown
-	for name in EXAMPLE_FILES:
-		example_dropdown.add_item(name)
+	# Populate examples dropdown with a placeholder first item
+	example_dropdown.add_item("Select example")
+	example_dropdown.set_item_disabled(0, true)
+	for file_name in EXAMPLE_FILES:
+		example_dropdown.add_item(file_name)
 
 	# Connect UI signals to their respective handlers
 	load_button.pressed.connect(_on_load_button_pressed)
@@ -71,7 +74,7 @@ func _ready():
 	camera.environment = environment
 
 	# Load the default example on the next frame (deferred so web VFS is ready)
-	_on_example_selected.call_deferred(0)
+	_on_example_selected.call_deferred(1)
 
 func _process(delta):
 	if loading_spinner.visible:
@@ -89,6 +92,12 @@ func _on_load_button_pressed():
 # Event handler: Called when a file is selected from the file dialog
 # Loads and displays the selected point cloud file
 func _on_file_selected(path: String):
+	_current_file = path
+
+	# Reset dropdown to placeholder if loading an external file
+	if path not in EXAMPLE_FILES.values():
+		example_dropdown.select(0)
+
 	# Update UI to show loading status
 	info_label.text = "Loading file: " + path.get_file()
 	loading_spinner.visible = true
@@ -122,10 +131,17 @@ func _on_files_dropped(files: PackedStringArray):
 		_on_file_selected(path)
 	else:
 		info_label.text = "Unsupported file type: ." + ext
+		info_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 
 func _on_example_selected(index: int):
-	var name = example_dropdown.get_item_text(index)
-	_on_file_selected(EXAMPLE_FILES[name])
+	if index == 0:
+		return
+	var file_name = example_dropdown.get_item_text(index)
+	var path = EXAMPLE_FILES[file_name]
+	if path == _current_file:
+		return
+	example_dropdown.select(index)
+	_on_file_selected(path)
 
 func _on_load_progress(loaded: int, total: int):
 	if total > 0:
@@ -136,6 +152,8 @@ func _on_load_progress(loaded: int, total: int):
 func _on_clear_pressed():
 	for child in point_cloud.get_children():
 		child.queue_free()
+	_current_file = ""
+	example_dropdown.select(0)
 	_reset_camera()
 	info_label.text = "Load a file or drag and drop to begin"
 
