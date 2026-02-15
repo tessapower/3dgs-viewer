@@ -1,5 +1,7 @@
 # Hello 3DGS - 3D Gaussian Splat Viewer
 
+[![pages-build-deployment](https://github.com/tessapower/3dgs-viewer/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/tessapower/3dgs-viewer/actions/workflows/pages/pages-build-deployment)
+
 A simple Godot tool for loading and visualizing 3D Gaussian Splat point cloud data.
 
 ![Goat skull model](assets/goat-skull.gif)
