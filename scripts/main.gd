@@ -119,8 +119,10 @@ func _on_file_selected(path: String):
 		_create_point_cloud(centered_verts, result.colors)
 		_auto_frame_camera(centered_verts)
 		info_label.text = "Loaded %d points from %s" % [result.point_count(), path.get_file()]
+		info_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	else:
 		info_label.text = "Error loading file: " + result.error
+		info_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
 
 func _on_files_dropped(files: PackedStringArray):
 	if files.size() == 0:
