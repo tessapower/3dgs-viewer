@@ -12,7 +12,7 @@ extends Node3D
 @onready var clear_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/ClearButton
 @onready var info_label: Label = $CanvasLayer/MarginContainer/UI/BottomBar/InfoLabel
 @onready var loading_spinner: CenterContainer = $CanvasLayer/LoadingSpinner
-@onready var spinner_char: Label = $CanvasLayer/LoadingSpinner/HBox/SpinnerChar
+@onready var loading_label: Label = $CanvasLayer/LoadingSpinner/Label
 @onready var camera: Camera3D = $Camera3D
 @onready var point_cloud: Node3D = $PointCloud
 
@@ -25,7 +25,7 @@ const EXAMPLE_FILES = {
 }
 
 # Loading spinner animation
-const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+const SPINNER_FRAMES = ["◜", "◝", "◞", "◟"]
 var _spinner_frame: int = 0
 var _spinner_time: float = 0.0
 var _current_file: String = ""
@@ -82,7 +82,7 @@ func _process(delta):
 		if _spinner_time >= 0.08:
 			_spinner_time = 0.0
 			_spinner_frame = (_spinner_frame + 1) % SPINNER_FRAMES.size()
-			spinner_char.text = SPINNER_FRAMES[_spinner_frame]
+			loading_label.text = SPINNER_FRAMES[_spinner_frame] + " Loading..."
 
 # Event handler: Called when the load button is pressed
 # Opens the file dialog for the user to select a point cloud file
