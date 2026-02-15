@@ -18,6 +18,9 @@ extends Node3D
 
 # Core Components
 var splat_loader: SplatLoader  # Handles loading of different point cloud file formats
+const MAX_CACHE_SIZE = 5
+var _model_cache: Dictionary = {}  # path -> {vertices, colors}
+var _cache_order: Array = []  # LRU order, oldest first
 const EXAMPLE_FILES = {
 	"Goat Skull": "res://tests/goat-skull/goat-skull.ply",
 	"Bonsai": "res://tests/bonsai-7k-mini.splat",
@@ -98,17 +101,27 @@ func _on_file_selected(path: String):
 	if path not in EXAMPLE_FILES.values():
 		example_dropdown.select(0)
 
+	# Clear any existing point cloud data from the scene
+	for child in point_cloud.get_children():
+		child.queue_free()
+
+	# Check cache first
+	if path in _model_cache:
+		var cached = _model_cache[path]
+		_create_point_cloud(cached.vertices, cached.colors)
+		_auto_frame_camera(cached.vertices)
+		info_label.text = "Loaded %d points from %s" % [cached.vertices.size(), path.get_file()]
+		info_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+		# Move to end of LRU order
+		_cache_order.erase(path)
+		_cache_order.append(path)
+		return
+
 	# Update UI to show loading status
 	info_label.text = "Loading file: " + path.get_file()
 	loading_spinner.visible = true
 
-	# Clear any existing point cloud data from the scene
-	# This prevents memory leaks and visual artifacts from previous loads
-	for child in point_cloud.get_children():
-		child.queue_free()  # Queue nodes for deletion at end of frame
-
 	# Asynchronously load the selected file using the splat loader
-	# This prevents UI freezing during large file loads
 	var result = await splat_loader.load_file(path)
 
 	loading_spinner.visible = false
@@ -120,9 +133,19 @@ func _on_file_selected(path: String):
 		_auto_frame_camera(centered_verts)
 		info_label.text = "Loaded %d points from %s" % [result.point_count(), path.get_file()]
 		info_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
+		# Cache the centered result
+		_cache_model(path, centered_verts, result.colors)
 	else:
 		info_label.text = "Error loading file: " + result.error
 		info_label.add_theme_color_override("font_color", Color(1.0, 0.4, 0.4))
+
+func _cache_model(path: String, vertices: PackedVector3Array, colors: PackedColorArray):
+	_model_cache[path] = {vertices = vertices, colors = colors}
+	_cache_order.append(path)
+	# Evict oldest entry if cache is full
+	while _cache_order.size() > MAX_CACHE_SIZE:
+		var evicted = _cache_order.pop_front()
+		_model_cache.erase(evicted)
 
 func _on_files_dropped(files: PackedStringArray):
 	if files.size() == 0:
