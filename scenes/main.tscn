@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://cdamkqxj5bwsv"]
 
 [ext_resource type="Script" uid="uid://bn1rbv2juqcrs" path="res://scripts/main.gd" id="1_o5qli"]
+[ext_resource type="FontFile" uid="uid://jyb4re14utpn" path="res://assets/Segoe-UI-Symbol.ttf" id="2_0wfyh"]
 
 [node name="Main" type="Node3D" unique_id=191818898]
 script = ExtResource("1_o5qli")
@@ -91,16 +92,18 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="HBox" type="HBoxContainer" parent="CanvasLayer/LoadingSpinner"]
+[node name="HBox" type="HBoxContainer" parent="CanvasLayer/LoadingSpinner" unique_id=662479987]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="SpinnerChar" type="Label" parent="CanvasLayer/LoadingSpinner/HBox"]
+[node name="SpinnerChar" type="Label" parent="CanvasLayer/LoadingSpinner/HBox" unique_id=319876801]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_fonts/font = ExtResource("2_0wfyh")
 theme_override_font_sizes/font_size = 24
+text = "◜◝◞◟"
 
-[node name="Label" type="Label" parent="CanvasLayer/LoadingSpinner/HBox"]
+[node name="Label" type="Label" parent="CanvasLayer/LoadingSpinner/HBox" unique_id=245520669]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 24
