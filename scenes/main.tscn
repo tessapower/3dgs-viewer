@@ -2,17 +2,17 @@
 
 [ext_resource type="Script" uid="uid://bn1rbv2juqcrs" path="res://scripts/main.gd" id="1_o5qli"]
 
-[node name="Main" type="Node3D"]
+[node name="Main" type="Node3D" unique_id=191818898]
 script = ExtResource("1_o5qli")
 
-[node name="Camera3D" type="Camera3D" parent="."]
+[node name="Camera3D" type="Camera3D" parent="." unique_id=1978736049]
 transform = Transform3D(1, 0, 0, 0, 0.766044, 0.642788, 0, -0.642788, 0.766044, 0, 2, 5)
 
-[node name="PointCloud" type="Node3D" parent="."]
+[node name="PointCloud" type="Node3D" parent="." unique_id=1461268055]
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1708922606]
 
-[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer"]
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer" unique_id=777460268]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -20,65 +20,69 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
 theme_override_constants/margin_bottom = 8
 
-[node name="UI" type="VBoxContainer" parent="CanvasLayer/MarginContainer"]
+[node name="UI" type="VBoxContainer" parent="CanvasLayer/MarginContainer" unique_id=855179131]
 layout_mode = 2
 mouse_filter = 2
 
-[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MarginContainer/UI"]
+[node name="HBoxContainer" type="HBoxContainer" parent="CanvasLayer/MarginContainer/UI" unique_id=371292571]
 layout_mode = 2
 theme_override_constants/separation = 16
 alignment = 1
 
-[node name="LoadButton" type="Button" parent="CanvasLayer/MarginContainer/UI/HBoxContainer"]
+[node name="LoadButton" type="Button" parent="CanvasLayer/MarginContainer/UI/HBoxContainer" unique_id=1320089340]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 tooltip_text = "Click this button to load a Splat file. Accepted file types are .PLY, .SPLAT, and .XYZ."
 text = "Load File"
 
-[node name="ResetCameraButton" type="Button" parent="CanvasLayer/MarginContainer/UI/HBoxContainer"]
+[node name="ResetCameraButton" type="Button" parent="CanvasLayer/MarginContainer/UI/HBoxContainer" unique_id=2128042895]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 tooltip_text = "Reset camera to default position (R)"
 text = "Reset Camera"
 
-[node name="ExampleDropdown" type="OptionButton" parent="CanvasLayer/MarginContainer/UI/HBoxContainer"]
+[node name="ExampleDropdown" type="OptionButton" parent="CanvasLayer/MarginContainer/UI/HBoxContainer" unique_id=509225408]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 tooltip_text = "Load an example file"
 
-[node name="ClearButton" type="Button" parent="CanvasLayer/MarginContainer/UI/HBoxContainer"]
+[node name="ClearButton" type="Button" parent="CanvasLayer/MarginContainer/UI/HBoxContainer" unique_id=1948717799]
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 tooltip_text = "Clear the current point cloud from the scene"
 text = "Clear"
 
-[node name="InfoLabel" type="Label" parent="CanvasLayer/MarginContainer/UI/HBoxContainer"]
-layout_mode = 2
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
-theme_override_font_sizes/font_size = 12
-text = "Load a file or drag and drop to begin"
-vertical_alignment = 1
-
-[node name="Spacer" type="Control" parent="CanvasLayer/MarginContainer/UI"]
+[node name="Spacer" type="Control" parent="CanvasLayer/MarginContainer/UI" unique_id=532881538]
 layout_mode = 2
 size_flags_vertical = 3
 mouse_filter = 2
 
-[node name="ControlsLabel" type="Label" parent="CanvasLayer/MarginContainer/UI"]
+[node name="BottomBar" type="HBoxContainer" parent="CanvasLayer/MarginContainer/UI" unique_id=568679947]
 layout_mode = 2
 mouse_filter = 2
+
+[node name="ControlsLabel" type="Label" parent="CanvasLayer/MarginContainer/UI/BottomBar" unique_id=1427414294]
+layout_mode = 2
 theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 12
 text = "  Controls: Drag = rotate, Shift+Drag/Middle = pan, Scroll/W-S = zoom, R = reset"
 
-[node name="LoadingSpinner" type="CenterContainer" parent="CanvasLayer"]
+[node name="InfoLabel" type="Label" parent="CanvasLayer/MarginContainer/UI/BottomBar" unique_id=384436942]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "Load a file or drag and drop to begin"
+horizontal_alignment = 2
+
+[node name="LoadingSpinner" type="CenterContainer" parent="CanvasLayer" unique_id=1084270928]
 visible = false
 anchors_preset = 15
 anchor_right = 1.0
@@ -87,13 +91,13 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Label" type="Label" parent="CanvasLayer/LoadingSpinner"]
+[node name="Label" type="Label" parent="CanvasLayer/LoadingSpinner" unique_id=316087073]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 24
 text = "Loading..."
 
-[node name="FileDialog" type="FileDialog" parent="CanvasLayer"]
+[node name="FileDialog" type="FileDialog" parent="CanvasLayer" unique_id=229325235]
 title = "Open a File"
 initial_position = 2
 size = Vector2i(800, 600)
