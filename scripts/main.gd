@@ -8,6 +8,7 @@ extends Node3D
 @onready var file_dialog: FileDialog = $CanvasLayer/FileDialog
 @onready var load_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/LoadButton
 @onready var reset_camera_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/ResetCameraButton
+@onready var example_dropdown: OptionButton = $CanvasLayer/MarginContainer/UI/HBoxContainer/ExampleDropdown
 @onready var clear_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/ClearButton
 @onready var info_label: Label = $CanvasLayer/MarginContainer/UI/HBoxContainer/InfoLabel
 @onready var camera: Camera3D = $Camera3D
@@ -15,6 +16,13 @@ extends Node3D
 
 # Core Components
 var splat_loader: SplatLoader  # Handles loading of different point cloud file formats
+const EXAMPLE_FILES = {
+	"Goat Skull": "res://tests/goat-skull/Goat skull.ply",
+	"Bonsai": "res://tests/bonsai-7k-mini.splat",
+	"DNA": "res://tests/dna.splat",
+	"Galaxy": "res://tests/galaxy.splat",
+	"Knot": "res://tests/knot.splat",
+}
 
 # Camera Control State
 var is_rotating: bool = false
@@ -26,8 +34,13 @@ func _ready():
 	# Initialize the splat loader component
 	splat_loader = SplatLoader.new()
 
+	# Populate examples dropdown
+	for name in EXAMPLE_FILES:
+		example_dropdown.add_item(name)
+
 	# Connect UI signals to their respective handlers
 	load_button.pressed.connect(_on_load_button_pressed)
+	example_dropdown.item_selected.connect(_on_example_selected)
 	reset_camera_button.pressed.connect(_reset_camera)
 	clear_button.pressed.connect(_on_clear_pressed)
 	file_dialog.file_selected.connect(_on_file_selected)
@@ -44,14 +57,6 @@ func _ready():
 	# Set default directory to the tests folder where example files are located
 	file_dialog.set_current_dir("res://tests/")
 
-	# Set initial instruction text for the user
-	info_label.text = "Load a file or drag and drop to begin"
-
-	# Initialize camera position and orientation
-	# Position camera at a good viewing distance from the origin
-	camera.position = Vector3(0, 2, 5)
-	camera.look_at(Vector3.ZERO, Vector3.UP)  # Look at origin with up vector pointing up
-
 	# Create environment with dark background so both colored and white points are visible
 	var environment = Environment.new()
 	environment.background_mode = Environment.BG_COLOR
@@ -59,6 +64,9 @@ func _ready():
 	environment.ambient_light_color = Color.WHITE
 	environment.ambient_light_energy = 0.3
 	camera.environment = environment
+
+	# Load the default example (Goat Skull)
+	_on_example_selected(0)
 
 # Event handler: Called when the load button is pressed
 # Opens the file dialog for the user to select a point cloud file
@@ -98,6 +106,10 @@ func _on_files_dropped(files: PackedStringArray):
 		_on_file_selected(path)
 	else:
 		info_label.text = "Unsupported file type: ." + ext
+
+func _on_example_selected(index: int):
+	var name = example_dropdown.get_item_text(index)
+	_on_file_selected(EXAMPLE_FILES[name])
 
 func _on_load_progress(loaded: int, total: int):
 	if total > 0:
