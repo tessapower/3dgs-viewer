@@ -336,6 +336,7 @@ func _load_splat_standard(buffer: PackedByteArray) -> LoadResult:
 	var colors = PackedColorArray()
 	var bytes_per_splat = 32
 
+	@warning_ignore("integer_division")
 	var total_points: int = buffer.size() / bytes_per_splat
 	vertices.resize(total_points)
 	colors.resize(total_points)
@@ -372,6 +373,7 @@ func _load_splat_extended(buffer: PackedByteArray) -> LoadResult:
 	var colors = PackedColorArray()
 	var bytes_per_splat = 56
 
+	@warning_ignore("integer_division")
 	var total_points: int = buffer.size() / bytes_per_splat
 	vertices.resize(total_points)
 	colors.resize(total_points)
