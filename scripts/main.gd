@@ -11,6 +11,8 @@ extends Node3D
 @onready var example_dropdown: OptionButton = $CanvasLayer/MarginContainer/UI/HBoxContainer/ExampleDropdown
 @onready var clear_button: Button = $CanvasLayer/MarginContainer/UI/HBoxContainer/ClearButton
 @onready var info_label: Label = $CanvasLayer/MarginContainer/UI/HBoxContainer/InfoLabel
+@onready var loading_spinner: CenterContainer = $CanvasLayer/LoadingSpinner
+@onready var loading_label: Label = $CanvasLayer/LoadingSpinner/Label
 @onready var camera: Camera3D = $Camera3D
 @onready var point_cloud: Node3D = $PointCloud
 
@@ -23,6 +25,11 @@ const EXAMPLE_FILES = {
 	"Galaxy": "res://tests/galaxy.splat",
 	"Knot": "res://tests/knot.splat",
 }
+
+# Loading spinner animation
+const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
+var _spinner_frame: int = 0
+var _spinner_time: float = 0.0
 
 # Camera Control State
 var is_rotating: bool = false
@@ -68,6 +75,14 @@ func _ready():
 	# Load the default example on the next frame (deferred so web VFS is ready)
 	_on_example_selected.call_deferred(0)
 
+func _process(delta):
+	if loading_spinner.visible:
+		_spinner_time += delta
+		if _spinner_time >= 0.08:
+			_spinner_time = 0.0
+			_spinner_frame = (_spinner_frame + 1) % SPINNER_FRAMES.size()
+			loading_label.text = SPINNER_FRAMES[_spinner_frame] + " Loading..."
+
 # Event handler: Called when the load button is pressed
 # Opens the file dialog for the user to select a point cloud file
 func _on_load_button_pressed():
@@ -78,6 +93,7 @@ func _on_load_button_pressed():
 func _on_file_selected(path: String):
 	# Update UI to show loading status
 	info_label.text = "Loading file: " + path.get_file()
+	loading_spinner.visible = true
 
 	# Clear any existing point cloud data from the scene
 	# This prevents memory leaks and visual artifacts from previous loads
@@ -87,6 +103,8 @@ func _on_file_selected(path: String):
 	# Asynchronously load the selected file using the splat loader
 	# This prevents UI freezing during large file loads
 	var result = await splat_loader.load_file(path)
+
+	loading_spinner.visible = false
 
 	# Handle the loading result
 	if result.success:

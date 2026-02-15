@@ -78,6 +78,21 @@ theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1)
 theme_override_font_sizes/font_size = 12
 text = "  Controls: Drag = rotate, Shift+Drag/Middle = pan, Scroll/W-S = zoom, R = reset"
 
+[node name="LoadingSpinner" type="CenterContainer" parent="CanvasLayer"]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="CanvasLayer/LoadingSpinner"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 24
+text = "Loading..."
+
 [node name="FileDialog" type="FileDialog" parent="CanvasLayer"]
 title = "Open a File"
 initial_position = 2
