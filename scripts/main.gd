@@ -65,8 +65,8 @@ func _ready():
 	environment.ambient_light_energy = 0.3
 	camera.environment = environment
 
-	# Load the default example (Goat Skull)
-	_on_example_selected(0)
+	# Load the default example on the next frame (deferred so web VFS is ready)
+	_on_example_selected.call_deferred(0)
 
 # Event handler: Called when the load button is pressed
 # Opens the file dialog for the user to select a point cloud file
