@@ -17,7 +17,7 @@ extends Node3D
 # Core Components
 var splat_loader: SplatLoader  # Handles loading of different point cloud file formats
 const EXAMPLE_FILES = {
-	"Goat Skull": "res://tests/goat-skull/Goat skull.ply",
+	"Goat Skull": "res://tests/goat-skull/goat-skull.ply",
 	"Bonsai": "res://tests/bonsai-7k-mini.splat",
 	"DNA": "res://tests/dna.splat",
 	"Galaxy": "res://tests/galaxy.splat",
