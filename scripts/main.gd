@@ -22,8 +22,6 @@ const EXAMPLE_FILES = {
 	"Goat Skull": "res://tests/goat-skull/goat-skull.ply",
 	"Bonsai": "res://tests/bonsai-7k-mini.splat",
 	"DNA": "res://tests/dna.splat",
-	"Galaxy": "res://tests/galaxy.splat",
-	"Knot": "res://tests/knot.splat",
 }
 
 # Loading spinner animation
